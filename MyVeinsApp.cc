@@ -8,16 +8,13 @@
 using namespace std;
 Define_Module(MyVeinsApp);
 
-//ofstream myfile;
-
 static int data;
 
 bool ids[1000]={0};
 int m=0,n=0;
-//bool
 
 string ss[10];
-
+string junc[10];
 
 vector<int>::iterator it;
 
@@ -68,6 +65,8 @@ double MyVeinsApp::calculateQ(int id){
 void MyVeinsApp::initialize(int stage) {
     ss[0]="190303315#13";
     ss[1]="-190326102#0";
+    ss[2]="190326107#0";
+    ss[3]="-190326102#2";
     BaseWaveApplLayer::initialize(stage);
     if (stage == 0) {
         //Initializing members and pointers of your application goes here
@@ -129,26 +128,13 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                 v[i].vi = vi;
                 v[i].di = s;
 
-             /*                   //
 
-              if((r1==v[i].rid)&&(!flag[0])){
-                  ids[myId]=1;
-                  cout<<" ini 1 "<<myId<<endl;
-                  backbone[0].push_back(myId);
-                  flag[0]=1;
-              }
-              else if((r2==v[i].rid)&&(!flag[1])){
-                  ids[myId]=1;
-                  cout<<" ini 2 "<<myId<<endl;
-                  backbone[1].push_back(myId);
-                  flag[1]=1;
-              }
-              */
                 for(int l =0;l<10;l++){
                 if((ss[l]==v[i].rid)&&(!flag[l])){
                                   ids[myId]=1;
                                   cout<<" ini 1 "<<myId<<endl;
                                   backbone[l].push_back(myId);
+
                                   flag[l]=1;
                               }
 
@@ -209,6 +195,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                  //rd[0].first=1;
 
                                  backbone[l].push_back(v[j].id);
+
                                  ids[v[j].id]=1;
                                  cout<<" a "<<v[j].id<<" "<<v[j].rid<<endl;
                                  //m++;
@@ -218,16 +205,19 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         }
 
+           for(int i=0;i<4;i++){
+               cout<<"Backbone "<<i<<"is"<<endl;
+               for(int j=0;j<backbone[i].size();j++)
+               {
+                   cout<<backbone[i][j]<<" ";
+               }
+               cout<<endl;
+           }
 
-        cout<<"Backbone 1"<<endl;
-        for(int i=0;i<backbone[0].size();i++)
-            cout<<backbone[0][i]<<" ";
-        cout<<endl;
 
-        cout<<"Backbone 2"<<endl;
-        for(int i=0;i<backbone[1].size();i++)
-            cout<<backbone[1][i]<<" ";
-        cout<<endl;
+
+
+
 
 }
 
@@ -293,7 +283,7 @@ void MyVeinsApp::handleSelfMsg(cMessage* msg) {
 
 void MyVeinsApp::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
-    //the vehicle has moved. Code that reacts to new positions goes here.
-    //member variables such as currentPosition and currentSpeed are updated in the parent class
+
+        //member variables such as currentPosition and currentSpeed are updated in the parent class
 
 }
