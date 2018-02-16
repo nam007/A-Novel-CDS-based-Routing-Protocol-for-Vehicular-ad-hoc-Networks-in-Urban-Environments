@@ -67,6 +67,10 @@ void MyVeinsApp::initialize(int stage) {
     ss[1]="-190326102#0";
     ss[2]="190326107#0";
     ss[3]="-190326102#2";
+    ss[4]="190308970#29";
+    ss[5]="190308970#30";
+    ss[6]="237686044";
+    ss[7]="190308952#7";
     BaseWaveApplLayer::initialize(stage);
     if (stage == 0) {
         //Initializing members and pointers of your application goes here
@@ -130,7 +134,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
 
                 for(int l =0;l<10;l++){
-                if((ss[l]==v[i].rid)&&(!flag[l])){
+                if((ss[l]==v[i].rid)&&(!flag[l]) && ids[myId]==0){
                                   ids[myId]=1;
                                   cout<<" ini 1 "<<myId<<endl;
                                   backbone[l].push_back(myId);
@@ -173,6 +177,9 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                         simtime_t a=simTime()-v[i].t;
                         if(a>10){
                             v.erase(v.begin()+i);
+
+
+
                        //     cout<<myId<<" Erased "<<v[i].t<<" is time "<<v[i].sid<<" sender id "<<a<<" diff "<<endl;
                         }
 
@@ -205,7 +212,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         }
 
-           for(int i=0;i<4;i++){
+           for(int i=0;i<7;i++){
                cout<<"Backbone "<<i<<"is"<<endl;
                for(int j=0;j<backbone[i].size();j++)
                {
@@ -215,6 +222,32 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
            }
 
 
+           int is,ij;
+           bool flag=false;
+           for(int i=0;i<7;i++){
+               for(int j=0;j<backbone[i].size();j++){
+                   if(backbone[i][j] == myId)
+                   {
+                       is=i;
+                       ij=j;
+                       flag=true;
+                       break;
+                   }
+               }
+           }
+           if(flag){
+               string sg;
+               if(myId==7)
+                  sg="7";
+               else
+                  sg = traciVehicle->getRoadId();
+               if(sg != ss[is])
+               {
+                   backbone[is].erase(backbone[is].begin() + ij);
+                   ids[myId]=0;
+                   cout<<myId<<"erased";
+               }
+           }
 
 
 
