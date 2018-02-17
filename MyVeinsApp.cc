@@ -9,17 +9,16 @@ using namespace std;
 Define_Module(MyVeinsApp);
 
 static int data;
-
-bool ids[1000]={0};
+map<int, pair<double,double>> mp;
+bool ids[10000]={0};
 int m=0,n=0;
 
 string ss[10];
-string junc[10];
-
+Coord junc[10];
 vector<int>::iterator it;
 
 vector<int>backbone[10];
-
+vector<int> junc_enter[10];
 
 int flag[10]={0};
 
@@ -29,6 +28,27 @@ double al = 0.5;
 double bt = 0.5;
 double q;
 int R =250;
+
+
+int MyVeinsApp:: Find_back(int id){
+    int i,j;
+    bool fl=false;
+    for(i=0;i<10;i++){
+        for(j=0;j<backbone[i].size();j++){
+            if(id == backbone[i][j])
+            {
+                fl=true;
+                break;
+            }
+        }
+        if(fl)
+                break;
+    }
+    if(fl)
+            return i;
+    else
+            return -1;
+}
 
 
 bool MyVeinsApp:: return_Value(){
@@ -71,6 +91,17 @@ void MyVeinsApp::initialize(int stage) {
     ss[5]="190308970#30";
     ss[6]="237686044";
     ss[7]="190308952#7";
+
+    junc[0]=Coord(2350.68, 4183.31, 0.0);
+    junc[1]=Coord(2335.29, 4097.08, 0.0);
+    junc[2]=Coord(2679.62, 4037.41, 0.0);
+    junc[3]=Coord(2503.06, 4068.83, 0.0);
+    junc[4]=Coord(2289.57, 3899.01, 0.0);
+    junc[5]=Coord(2024.09, 3945.45, 0.0);
+    junc[6]=Coord(1876.24, 3867.13, 0.0);
+    junc[7]=Coord(1859.78, 3597.17, 0.0);
+
+
     BaseWaveApplLayer::initialize(stage);
     if (stage == 0) {
         //Initializing members and pointers of your application goes here
@@ -87,11 +118,15 @@ void MyVeinsApp::finish() {
 }
 
 void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
+
+        //  ROUTING TABLE
+
         double d=traci->getDistance(bsm->getSenderPos(),curPosition, 0);
        bool taken =true;
        double s;
        double vi;
        int z=0;
+
        for(int i=0;i<v.size();i++){
         if(v[i].id == myId){
                   s += v[i].dist;
@@ -195,6 +230,8 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         }
 
+         //   BACKBONE CREATION
+
         if(j!=-1){
 
             for(int l=0;l<10;l++){
@@ -212,7 +249,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         }
 
-           for(int i=0;i<7;i++){
+           for(int i=0;i<=7;i++){
                cout<<"Backbone "<<i<<"is"<<endl;
                for(int j=0;j<backbone[i].size();j++)
                {
@@ -224,7 +261,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
            int is,ij;
            bool flag=false;
-           for(int i=0;i<7;i++){
+           for(int i=0;i<=7;i++){
                for(int j=0;j<backbone[i].size();j++){
                    if(backbone[i][j] == myId)
                    {
@@ -248,6 +285,15 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                    cout<<myId<<"erased";
                }
            }
+
+
+           // BRIDGE NODE CREATION
+           cout<<"p is "<<p.id<<" "<<p.x<<" "<<p.y<<endl;
+           Coord prev;
+           prev.x=p.x;
+           prev.y=p.y;
+           double bn = traci->getDistance(prev,curPosition, 0);
+           cout<<bn<<endl;
 
 
 
@@ -305,7 +351,7 @@ void MyVeinsApp::handleSelfMsg(cMessage* msg) {
         }
         }
 
-   cout<<"handle self"<<endl;
+   //cout<<"handle self"<<endl;
 
 
 
@@ -316,6 +362,53 @@ void MyVeinsApp::handleSelfMsg(cMessage* msg) {
 
 void MyVeinsApp::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
+    bool fl=0;
+    int i,j;
+    for( i=0;i<10;i++){
+        for( j=0;j<backbone[i].size();i++){
+            if(myId == backbone[i][j])
+            {
+                fl=1;
+                break;
+            }
+        }
+        if(fl)
+               break;
+    }
+    if(fl){
+    Coord prev;
+    prev.x=p.x;
+    prev.y=p.y;
+  //  cout<<i<<" "<<junc[i]<<" "<<backbone[i][j]<<" "<<prev<<" "<<curPosition<<" "<<myId<<endl;
+    double dis = traci->getDistance(junc[i],prev,0);
+    pair<double,double> pt;
+    pt.first=dis;
+
+    cout<<"dis is "<<dis<<" "<<myId<<endl;
+    p.id=myId;
+    p.x= curPosition.x;
+    p.y=curPosition.y;
+    double dis2 = traci->getDistance(junc[i],curPosition,0);
+    cout<<"dis2 is "<<dis2<<" "<<myId<<endl;
+    pt.second = dis2;
+    mp[myId]=pt;
+    }
+
+
+        map<int,pair<double,double>> :: iterator it;
+        for(it=mp.begin();it!=mp.end();it++){
+            pair<double,double> ps;
+            int idd = it->first;
+            ps = it->second;
+            if(ps.first > ps.second && ps.second >=1 && ps.second<1.5){
+                    int iu = find_back(idd);
+                       junc_enter[iu].push_back(idd);
+            }
+
+        }
+
+
+
 
         //member variables such as currentPosition and currentSpeed are updated in the parent class
 
