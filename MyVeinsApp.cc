@@ -171,7 +171,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                 for(int l =0;l<10;l++){
                 if((ss[l]==v[i].rid)&&(!flag[l]) && ids[myId]==0){
                                   ids[myId]=1;
-                                  cout<<" ini 1 "<<myId<<endl;
+                                //  cout<<" ini 1 "<<myId<<endl;
                                   backbone[l].push_back(myId);
 
                                   flag[l]=1;
@@ -221,7 +221,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
                         if((sf>v[i].SF)&&(!ids[v[i].id])&&(v[i].id!=7)&&(bsm->getRid()==v[i].rid)){
                             sf=v[i].SF;
-                            cout<<1<<" "<<endl;
+
                             j=i;
                         }
 
@@ -241,7 +241,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                  backbone[l].push_back(v[j].id);
 
                                  ids[v[j].id]=1;
-                                 cout<<" a "<<v[j].id<<" "<<v[j].rid<<endl;
+                      //           cout<<" a "<<v[j].id<<" "<<v[j].rid<<endl;
                                  //m++;
                                  //backbone1.push_back(v[j].id);
                             }
@@ -249,14 +249,14 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         }
 
-           for(int i=0;i<=7;i++){
+     /*      for(int i=0;i<=7;i++){
                cout<<"Backbone "<<i<<"is"<<endl;
                for(int j=0;j<backbone[i].size();j++)
                {
                    cout<<backbone[i][j]<<" ";
                }
                cout<<endl;
-           }
+           } */
 
 
            int is,ij;
@@ -282,19 +282,36 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                {
                    backbone[is].erase(backbone[is].begin() + ij);
                    ids[myId]=0;
-                   cout<<myId<<"erased";
+        //           cout<<myId<<"erased";
                }
            }
 
 
            // BRIDGE NODE CREATION
-           cout<<"p is "<<p.id<<" "<<p.x<<" "<<p.y<<endl;
-           Coord prev;
-           prev.x=p.x;
-           prev.y=p.y;
-           double bn = traci->getDistance(prev,curPosition, 0);
-           cout<<bn<<endl;
 
+
+
+
+           map<int,pair<double,double>> :: iterator it;
+                  for(it=mp.begin();it!=mp.end();it++){
+                      pair<double,double> ps;
+                      int idd = it->first;
+                      ps = it->second;
+                      if(ps.first > ps.second && ps.second <=200 ){
+                              int iu = Find_back(idd);
+                                 junc_enter[iu].push_back(idd);
+                      }
+
+                  }
+
+
+                  for(int i=0;i<10;i++){
+                         //        cout<<"junction entering is "<<i<<"is"<<endl;
+                                 for(int j=0;j<junc_enter[i].size();j++)
+                                 {
+                                     cout<<"junc_enter"<<junc_enter[i][j]<<" ";
+                                 }
+                             }
 
 
 
@@ -316,7 +333,7 @@ void MyVeinsApp::handleSelfMsg(cMessage* msg) {
     switch (msg->getKind()) {
         case SEND_BEACON_EVT: {
             BasicSafetyMessage* bsm = new BasicSafetyMessage();
-            cout<<"beacon"<<endl;
+          //  cout<<"beacon"<<endl;
             double q=calculateQ(myId);
             sf=abs(1-q);
             //cout<<" speed "<<mobility->getCurrentSpeed();
@@ -384,28 +401,17 @@ void MyVeinsApp::handlePositionUpdate(cObject* obj) {
     pair<double,double> pt;
     pt.first=dis;
 
-    cout<<"dis is "<<dis<<" "<<myId<<endl;
+  //  cout<<"dis is "<<dis<<" "<<myId<<endl;
     p.id=myId;
     p.x= curPosition.x;
     p.y=curPosition.y;
     double dis2 = traci->getDistance(junc[i],curPosition,0);
-    cout<<"dis2 is "<<dis2<<" "<<myId<<endl;
+ //   cout<<"dis2 is "<<dis2<<" "<<myId<<endl;
     pt.second = dis2;
     mp[myId]=pt;
     }
 
 
-        map<int,pair<double,double>> :: iterator it;
-        for(it=mp.begin();it!=mp.end();it++){
-            pair<double,double> ps;
-            int idd = it->first;
-            ps = it->second;
-            if(ps.first > ps.second && ps.second >=1 && ps.second<1.5){
-                    int iu = find_back(idd);
-                       junc_enter[iu].push_back(idd);
-            }
-
-        }
 
 
 
