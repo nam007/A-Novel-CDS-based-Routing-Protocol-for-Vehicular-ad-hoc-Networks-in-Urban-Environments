@@ -51,6 +51,11 @@ struct neighbour{
                     double di;
                //     bool ta=false;
                 };
+struct pre_pos{
+    int id;
+    double x;
+    double y;
+};
 
 
 class MyVeinsApp : public BaseWaveApplLayer {
@@ -69,9 +74,11 @@ class MyVeinsApp : public BaseWaveApplLayer {
         virtual void handleSelfMsg(cMessage* msg);
         virtual void handlePositionUpdate(cObject* obj);
         vector<struct neighbour> v;
+        struct pre_pos p;
         virtual double calculateQ(int id);
 
         virtual bool return_Value();
+        virtual int Find_back(int id);
     };
 
 #endif
