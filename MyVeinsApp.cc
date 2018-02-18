@@ -8,6 +8,7 @@
 using namespace std;
 Define_Module(MyVeinsApp);
 
+map<int, double> mv;
 static int data;
 map<int, pair<double,double>> mp;
 bool ids[10000]={0};
@@ -19,7 +20,7 @@ vector<int>::iterator it;
 
 vector<int>backbone[10];
 vector<int> junc_enter[10];
-
+int bridge_node[10];
 int flag[10]={0};
 
 double sf=INT_MAX;
@@ -102,6 +103,9 @@ void MyVeinsApp::initialize(int stage) {
     junc[7]=Coord(1859.78, 3597.17, 0.0);
 
 
+      p.id=myId;
+      p.x=curPosition.x;
+      p.y=curPosition.y;
     BaseWaveApplLayer::initialize(stage);
     if (stage == 0) {
         //Initializing members and pointers of your application goes here
@@ -297,23 +301,33 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                       pair<double,double> ps;
                       int idd = it->first;
                       ps = it->second;
-                      if(ps.first > ps.second && ps.second <=200 ){
+                      if(ps.first > ps.second && ps.second >671 && ps.second <672){
                               int iu = Find_back(idd);
                                  junc_enter[iu].push_back(idd);
                       }
 
                   }
-
-
+                  int iid;
+                  bool fl=false;
                   for(int i=0;i<10;i++){
                          //        cout<<"junction entering is "<<i<<"is"<<endl;
+                      double mn=INT_MAX;
+
+                          fl=false;
                                  for(int j=0;j<junc_enter[i].size();j++)
                                  {
-                                     cout<<"junc_enter"<<junc_enter[i][j]<<" ";
+                                     if(mv[junc_enter[i][j]]< mn){
+                                         mn = mv[junc_enter[i][j]];
+                                         iid =junc_enter[i][j];
+                                         fl=true;
+                                     }
+                                     cout<<"junc_enter"<<junc_enter[i][j]<<endl;
+                                 }
+                                 if(fl){
+                                     bridge_node[i]=iid;
+                                 cout<<"bridge node for "<<i<<"th road is "<<iid;
                                  }
                              }
-
-
 
 }
 
@@ -379,6 +393,10 @@ void MyVeinsApp::handleSelfMsg(cMessage* msg) {
 
 void MyVeinsApp::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
+    double xv=curSpeed.x;
+    double yv=curSpeed.y;
+    double xy = sqrt(xv*xv + yv*yv);
+    mv[myId]=xy;
     bool fl=0;
     int i,j;
     for( i=0;i<10;i++){
