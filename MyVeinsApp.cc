@@ -9,6 +9,8 @@ using namespace std;
 Define_Module(MyVeinsApp);
 
 map<int, double> mv;
+int hop[10]={0};
+int h[10]={0};
 static int data;
 map<int, pair<double,double>> mp;
 bool ids[10000]={0};
@@ -89,18 +91,20 @@ void MyVeinsApp::initialize(int stage) {
     ss[2]="190326107#0";
     ss[3]="-190326102#2";
     ss[4]="190308970#29";
-    ss[5]="190308970#30";
-    ss[6]="237686044";
-    ss[7]="190308952#7";
+   // ss[5]="190308970#30";
+   // ss[6]="237686044";
+   // ss[7]="190308952#7";
 
-    junc[0]=Coord(2350.68, 4183.31, 0.0);
-    junc[1]=Coord(2335.29, 4097.08, 0.0);
-    junc[2]=Coord(2679.62, 4037.41, 0.0);
-    junc[3]=Coord(2503.06, 4068.83, 0.0);
-    junc[4]=Coord(2289.57, 3899.01, 0.0);
-    junc[5]=Coord(2024.09, 3945.45, 0.0);
-    junc[6]=Coord(1876.24, 3867.13, 0.0);
-    junc[7]=Coord(1859.78, 3597.17, 0.0);
+    junc[0]=Coord(2377.78, 4678.1, 1.895);
+    junc[1]=Coord(2364.59, 4762.59, 1.895);
+    junc[2]=Coord(2700.85, 4825.08, 0.0);
+    junc[3]=Coord(2533.1, 4795.33, 0.0);
+
+    junc[4]=Coord(2319.03, 4965.07, 1.895);
+
+//    junc[5]=Coord(2024.09, 3945.45, 0.0);
+ //   junc[6]=Coord(1876.24, 3867.13, 0.0);
+  //  junc[7]=Coord(1859.78, 3597.17, 0.0);
 
 
       p.id=myId;
@@ -118,6 +122,8 @@ void MyVeinsApp::initialize(int stage) {
 }
 
 void MyVeinsApp::finish() {
+    for(int i=0;i<5;i++)
+                   cout<<"hop "<<i<<" "<<hop[i]<<endl;
     BaseWaveApplLayer::finish();
 }
 
@@ -172,11 +178,12 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                 v[i].di = s;
 
 
-                for(int l =0;l<10;l++){
+                for(int l =0;l<5;l++){
                 if((ss[l]==v[i].rid)&&(!flag[l]) && ids[myId]==0){
                                   ids[myId]=1;
                                 //  cout<<" ini 1 "<<myId<<endl;
                                   backbone[l].push_back(myId);
+                                  h[l]++;
 
                                   flag[l]=1;
                               }
@@ -238,11 +245,12 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         if(j!=-1){
 
-            for(int l=0;l<10;l++){
+            for(int l=0;l<5;l++){
                 if(ss[l]==v[j].rid){
                                  //rd[0].first=1;
 
                                  backbone[l].push_back(v[j].id);
+                                 h[l]++;
 
                                  ids[v[j].id]=1;
                       //           cout<<" a "<<v[j].id<<" "<<v[j].rid<<endl;
@@ -265,7 +273,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
            int is,ij;
            bool flag=false;
-           for(int i=0;i<=7;i++){
+           for(int i=0;i<=4;i++){
                for(int j=0;j<backbone[i].size();j++){
                    if(backbone[i][j] == myId)
                    {
@@ -285,6 +293,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                if(sg != ss[is])
                {
                    backbone[is].erase(backbone[is].begin() + ij);
+
                    ids[myId]=0;
         //           cout<<myId<<"erased";
                }
@@ -301,15 +310,17 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                       pair<double,double> ps;
                       int idd = it->first;
                       ps = it->second;
-                      if(ps.first > ps.second && ps.second >671 && ps.second <672){
+                      if(ps.first > ps.second && ps.second<=5 ){
                               int iu = Find_back(idd);
                                  junc_enter[iu].push_back(idd);
+                            //     cout<<"current position is"<<curPosition<<endl;
                       }
+
 
                   }
                   int iid;
                   bool fl=false;
-                  for(int i=0;i<10;i++){
+                  for(int i=0;i<5;i++){
                          //        cout<<"junction entering is "<<i<<"is"<<endl;
                       double mn=INT_MAX;
 
@@ -321,11 +332,16 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                          iid =junc_enter[i][j];
                                          fl=true;
                                      }
-                                     cout<<"junc_enter"<<junc_enter[i][j]<<endl;
+                          //           cout<<"junc_enter"<<junc_enter[i][j]<<endl;
                                  }
                                  if(fl){
+                                      if(hop[i]==0)
+                                          hop[i] = h[i];
+
+
+
                                      bridge_node[i]=iid;
-                                 cout<<"bridge node for "<<i<<"th road is "<<iid;
+                                 cout<<"bridge node for "<<i<<"th road is "<<iid<<endl;
                                  }
                              }
 
@@ -399,7 +415,7 @@ void MyVeinsApp::handlePositionUpdate(cObject* obj) {
     mv[myId]=xy;
     bool fl=0;
     int i,j;
-    for( i=0;i<10;i++){
+    for( i=0;i<5;i++){
         for( j=0;j<backbone[i].size();i++){
             if(myId == backbone[i][j])
             {
@@ -414,19 +430,23 @@ void MyVeinsApp::handlePositionUpdate(cObject* obj) {
     Coord prev;
     prev.x=p.x;
     prev.y=p.y;
-  //  cout<<i<<" "<<junc[i]<<" "<<backbone[i][j]<<" "<<prev<<" "<<curPosition<<" "<<myId<<endl;
+
     double dis = traci->getDistance(junc[i],prev,0);
     pair<double,double> pt;
     pt.first=dis;
+    double ds;
+    ds = sqrt(pow((junc[i].x - prev.x),2) + pow((junc[i].y - prev.y),2) );
 
-  //  cout<<"dis is "<<dis<<" "<<myId<<endl;
     p.id=myId;
     p.x= curPosition.x;
     p.y=curPosition.y;
     double dis2 = traci->getDistance(junc[i],curPosition,0);
- //   cout<<"dis2 is "<<dis2<<" "<<myId<<endl;
+
     pt.second = dis2;
     mp[myId]=pt;
+
+
+
     }
 
 
