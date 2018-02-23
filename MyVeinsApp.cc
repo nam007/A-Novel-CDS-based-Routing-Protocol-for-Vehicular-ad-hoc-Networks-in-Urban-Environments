@@ -24,7 +24,7 @@ vector<int>backbone[10];
 vector<int> junc_enter[10];
 int bridge_node[10];
 int flag[10]={0};
-
+double length[10]={0};
 double sf=INT_MAX;
 int b=0;
 double al = 0.5;
@@ -32,6 +32,7 @@ double bt = 0.5;
 double q;
 int R =250;
 
+int rsu_id[10];
 
 int MyVeinsApp:: Find_back(int id){
     int i,j;
@@ -106,10 +107,19 @@ void MyVeinsApp::initialize(int stage) {
  //   junc[6]=Coord(1876.24, 3867.13, 0.0);
   //  junc[7]=Coord(1859.78, 3597.17, 0.0);
 
+    rsu_id[0]=7;
+    rsu_id[1]=8;
+    rsu_id[2]=9;
+    rsu_id[3]=10;
+    rsu_id[4]=11;
+
 
       p.id=myId;
       p.x=curPosition.x;
       p.y=curPosition.y;
+
+
+
     BaseWaveApplLayer::initialize(stage);
     if (stage == 0) {
         //Initializing members and pointers of your application goes here
@@ -123,13 +133,12 @@ void MyVeinsApp::initialize(int stage) {
 
 void MyVeinsApp::finish() {
     for(int i=0;i<5;i++)
-                   cout<<"hop "<<i<<" "<<hop[i]<<endl;
+                   cout<<"bridge node "<<i<<" "<<bridge_node[i]<<endl;
     BaseWaveApplLayer::finish();
 }
 
 void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
-        //  ROUTING TABLE
 
         double d=traci->getDistance(bsm->getSenderPos(),curPosition, 0);
        bool taken =true;
@@ -165,7 +174,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
                 //double q=calculateQ(myId);
                 v[i].SF=bsm->getSF();
-                if(myId >7)
+                if(myId !=7 && myId!=8 && myId!=9 && myId!=10 && myId!=11)
                 v[i].rid=traciVehicle->getRoadId();//bsm->getRID();
                 else
                     v[i].rid = "RSU";
@@ -204,10 +213,10 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         //double q=calculateQ(myId);
         n.SF=bsm->getSF();//bsm->getSF();
-        if(myId !=7)
+        if(myId !=7 && myId!=8 && myId!=9 && myId!=10 && myId!=11)
                         n.rid=traciVehicle->getRoadId();//bsm->getRID();
                         else
-                        n.rid = "RSU";
+         n.rid = "RSU";
         n.dist=d;
         n.t=simTime();
         n.vi = vi;
@@ -230,7 +239,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                         }
 
 
-                        if((sf>v[i].SF)&&(!ids[v[i].id])&&(v[i].id!=7)&&(bsm->getRid()==v[i].rid)){
+                        if((sf>v[i].SF)&&(!ids[v[i].id])&&(myId !=7 && myId!=8 && myId!=9 && myId!=10 && myId!=11)&&(bsm->getRid()==v[i].rid)){
                             sf=v[i].SF;
 
                             j=i;
@@ -261,7 +270,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
         }
 
-     /*      for(int i=0;i<=7;i++){
+  /*        for(int i=0;i<=4;i++){
                cout<<"Backbone "<<i<<"is"<<endl;
                for(int j=0;j<backbone[i].size();j++)
                {
@@ -286,7 +295,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
            }
            if(flag){
                string sg;
-               if(myId==7)
+               if(myId ==7 || myId==8 || myId==9 || myId==10 || myId==11)
                   sg="7";
                else
                   sg = traciVehicle->getRoadId();
@@ -332,16 +341,24 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                          iid =junc_enter[i][j];
                                          fl=true;
                                      }
-                          //           cout<<"junc_enter"<<junc_enter[i][j]<<endl;
+                               //     cout<<"junc_enter"<<junc_enter[i][j]<<endl;
                                  }
                                  if(fl){
                                       if(hop[i]==0)
                                           hop[i] = h[i];
-
-
-
                                      bridge_node[i]=iid;
-                                 cout<<"bridge node for "<<i<<"th road is "<<iid<<endl;
+
+                                     WaveShortMessage* wsm = new WaveShortMessage();
+                                     populateWSM(wsm);
+                                     wsm->setRecipientAddress(rsu_id[i]);
+                                     wsm->setName("RAP");
+                                     wsm->setSenderAddress(iid);
+                                     wsm->setWsmData("RAP");
+                                     wsm->setWSMRid(ss[i]);
+                                     cout<<ss[i]<<endl;
+                                     sendDown(wsm);
+
+                        //         cout<<"bridge node for "<<i<<"th road is "<<iid<<endl;
                                  }
                              }
 
@@ -351,6 +368,10 @@ void MyVeinsApp::onWSM(WaveShortMessage* wsm) {
     //Your application has received a data message from another car or RSU
     //code for handling the message goes here, see TraciDemo11p.cc for examples
     //traciVehicle->getRoadId();
+
+    if(wsm->getWSMRid()==traciVehicle->getRoadId())
+        cout<<"my id  "<<myId<<" wsm info is "<<wsm->getWsmData()<<" road "<<wsm->getWSMRid()<<" recipeint id "<<wsm->getRecipientAddress()<<endl;
+
 }
 
 void MyVeinsApp::onWSA(WaveServiceAdvertisment* wsa) {
@@ -360,6 +381,7 @@ void MyVeinsApp::onWSA(WaveServiceAdvertisment* wsa) {
 }
 
 void MyVeinsApp::handleSelfMsg(cMessage* msg) {
+
     switch (msg->getKind()) {
         case SEND_BEACON_EVT: {
             BasicSafetyMessage* bsm = new BasicSafetyMessage();
@@ -374,11 +396,11 @@ void MyVeinsApp::handleSelfMsg(cMessage* msg) {
             bsm->setY(curPosition.y);
             //bsm->setb(b);
             bsm->setSF(sf);
-            if(myId !=7)
+            if(myId !=7 && myId!=8 && myId!=9 && myId!=10 && myId!=11)
                  bsm->setRid(mobility->getRoadId().c_str());
             else
                  bsm->setRid("RSU");
-
+         //   cout<<"handle self "<<myId<<" "<<simTime()<<endl;
 
             sendDown(bsm);
             scheduleAt(simTime() + beaconInterval, sendBeaconEvt);
@@ -397,17 +419,13 @@ void MyVeinsApp::handleSelfMsg(cMessage* msg) {
             break;
         }
         }
-
-   //cout<<"handle self"<<endl;
-
-
-
  //   BaseWaveApplLayer::handleSelfMsg(msg);
 
 
 }
 
 void MyVeinsApp::handlePositionUpdate(cObject* obj) {
+  //  cout<<"Handle position "<<myId<<endl;
     BaseWaveApplLayer::handlePositionUpdate(obj);
     double xv=curSpeed.x;
     double yv=curSpeed.y;
@@ -445,15 +463,8 @@ void MyVeinsApp::handlePositionUpdate(cObject* obj) {
     pt.second = dis2;
     mp[myId]=pt;
 
-
-
     }
-
-
-
-
-
-
-        //member variables such as currentPosition and currentSpeed are updated in the parent class
+ //   cout<<"Initialize "<<myId<<" is"<<curPosition<<endl;
+    //member variables such as currentPosition and currentSpeed are updated in the parent class
 
 }
