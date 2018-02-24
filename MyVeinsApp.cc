@@ -1,4 +1,5 @@
 #include "MyVeinsApp.h"
+#include "veins/modules/application/ieee80211p/BaseWaveApplLayer.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -15,7 +16,7 @@ static int data;
 map<int, pair<double,double>> mp;
 bool ids[10000]={0};
 int m=0,n=0;
-
+double dp[10]={0};
 string ss[10];
 Coord junc[10];
 vector<int>::iterator it;
@@ -24,7 +25,8 @@ vector<int>backbone[10];
 vector<int> junc_enter[10];
 int bridge_node[10];
 int flag[10]={0};
-double length[10]={0};
+
+
 double sf=INT_MAX;
 int b=0;
 double al = 0.5;
@@ -52,6 +54,15 @@ int MyVeinsApp:: Find_back(int id){
             return i;
     else
             return -1;
+}
+
+
+int MyVeinsApp:: Find_rsu(int id)
+{
+    for(int i=0;i<10;i++)
+            if(rsu_id[i] == id)
+                    return i;
+    return -1;
 }
 
 
@@ -133,7 +144,7 @@ void MyVeinsApp::initialize(int stage) {
 
 void MyVeinsApp::finish() {
     for(int i=0;i<5;i++)
-                   cout<<"bridge node "<<i<<" "<<bridge_node[i]<<endl;
+                   cout<<"delay "<<i<<" "<<dp[i]<<endl;
     BaseWaveApplLayer::finish();
 }
 
@@ -350,12 +361,13 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 
                                      WaveShortMessage* wsm = new WaveShortMessage();
                                      populateWSM(wsm);
+
                                      wsm->setRecipientAddress(rsu_id[i]);
                                      wsm->setName("RAP");
                                      wsm->setSenderAddress(iid);
                                      wsm->setWsmData("RAP");
                                      wsm->setWSMRid(ss[i]);
-                                     cout<<ss[i]<<endl;
+                                     wsm->setFl(0);
                                      sendDown(wsm);
 
                         //         cout<<"bridge node for "<<i<<"th road is "<<iid<<endl;
@@ -365,12 +377,19 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
 }
 
 void MyVeinsApp::onWSM(WaveShortMessage* wsm) {
-    //Your application has received a data message from another car or RSU
-    //code for handling the message goes here, see TraciDemo11p.cc for examples
-    //traciVehicle->getRoadId();
+    int id = Find_back(myId);
+    if(wsm->getWSMRid()==traciVehicle->getRoadId()){
+        cout<<"fl is "<<wsm->getFl()<<endl;
+        if(wsm->getFl() == 0){
 
-    if(wsm->getWSMRid()==traciVehicle->getRoadId())
-        cout<<"my id  "<<myId<<" wsm info is "<<wsm->getWsmData()<<" road "<<wsm->getWSMRid()<<" recipeint id "<<wsm->getRecipientAddress()<<endl;
+            sendDown(wsm->dup());
+        }
+
+
+      //  cout<<"my id  "<<myId<<" wsm info is "<<wsm->getWsmData()<<" road "<<wsm->getWSMRid()<<" recipeint id "<<wsm->getRecipientAddress()<<endl;
+    }
+
+
 
 }
 
