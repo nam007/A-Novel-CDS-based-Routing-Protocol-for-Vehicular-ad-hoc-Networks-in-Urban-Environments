@@ -9,7 +9,7 @@
 #define __WAVESHORTMESSAGE_M_H
 
 #include <omnetpp.h>
-using namespace std;
+
 // nedtool version check
 #define MSGC_VERSION 0x0502
 #if (MSGC_VERSION!=OMNETPP_VERSION)
@@ -45,10 +45,11 @@ using namespace std;
  *     int senderAddress = 0;
  *     int recipientAddress = -1;
  *     int serial = 0;
- * //	string rid;
- * 
+ *     //	string rid;
+ *     string wrid;
  *     simtime_t timestamp = 0;
- * 
+ *     simtime_t delay;
+ *     bool fl;
  * }
  * </pre>
  */
@@ -67,10 +68,11 @@ class WaveShortMessage : public ::omnetpp::cPacket
     int senderAddress;
     int recipientAddress;
     int serial;
-    string wrid;
+    std::string wrid;
     ::omnetpp::simtime_t timestamp;
     ::omnetpp::simtime_t delay;
     bool fl;
+    int hop;
 
   private:
     void copy(const WaveShortMessage& other);
@@ -113,20 +115,16 @@ class WaveShortMessage : public ::omnetpp::cPacket
     virtual void setRecipientAddress(int recipientAddress);
     virtual int getSerial() const;
     virtual void setSerial(int serial);
+    virtual std::string getWSMRid() const;
+    virtual void setWSMRid(std::string wrid);
     virtual ::omnetpp::simtime_t getTimestamp() const;
     virtual void setTimestamp(::omnetpp::simtime_t timestamp);
-
-
-    virtual string getWSMRid() const;
-    virtual void setWSMRid(string wrid);
-
     virtual ::omnetpp::simtime_t getDelay() const;
-        virtual void setDelay(::omnetpp::simtime_t dl);
-
-        virtual bool getFl() const;
-                virtual void setFl(bool val);
-
-
+    virtual void setDelay(::omnetpp::simtime_t delay);
+    virtual bool getFl() const;
+    virtual void setFl(bool fl);
+    virtual int getHop() const;
+        virtual void setHop(int hop);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const WaveShortMessage& obj) {obj.parsimPack(b);}

@@ -44,6 +44,7 @@ packet WaveShortMessage {
 //	string rid;
 	string wrid;
 	simtime_t timestamp = 0;
-	simtime_t delay=0;
+	simtime_t delay;
 	bool fl;
+	int hop;
 }

@@ -193,8 +193,10 @@ WaveShortMessage::WaveShortMessage(const char *name, short kind) : ::omnetpp::cP
     this->senderAddress = 0;
     this->recipientAddress = -1;
     this->serial = 0;
-    this->wrid;
     this->timestamp = 0;
+    this->delay = 0;
+    this->fl = false;
+    this->hop = 0;
 }
 
 WaveShortMessage::WaveShortMessage(const WaveShortMessage& other) : ::omnetpp::cPacket(other)
@@ -230,6 +232,8 @@ void WaveShortMessage::copy(const WaveShortMessage& other)
     this->serial = other.serial;
     this->wrid = other.wrid;
     this->timestamp = other.timestamp;
+    this->delay = other.delay;
+    this->fl = other.fl;
 }
 
 void WaveShortMessage::parsimPack(omnetpp::cCommBuffer *b) const
@@ -249,6 +253,8 @@ void WaveShortMessage::parsimPack(omnetpp::cCommBuffer *b) const
     doParsimPacking(b,this->serial);
     doParsimPacking(b,this->wrid);
     doParsimPacking(b,this->timestamp);
+    doParsimPacking(b,this->delay);
+    doParsimPacking(b,this->fl);
 }
 
 void WaveShortMessage::parsimUnpack(omnetpp::cCommBuffer *b)
@@ -268,6 +274,8 @@ void WaveShortMessage::parsimUnpack(omnetpp::cCommBuffer *b)
     doParsimUnpacking(b,this->serial);
     doParsimUnpacking(b,this->wrid);
     doParsimUnpacking(b,this->timestamp);
+    doParsimUnpacking(b,this->delay);
+    doParsimUnpacking(b,this->fl);
 }
 
 int WaveShortMessage::getWsmVersion() const
@@ -390,6 +398,16 @@ void WaveShortMessage::setSerial(int serial)
     this->serial = serial;
 }
 
+std::string WaveShortMessage::getWSMRid() const
+{
+    return this->wrid.c_str();
+}
+
+void WaveShortMessage::setWSMRid(std::string wrid)
+{
+    this->wrid = wrid;
+}
+
 ::omnetpp::simtime_t WaveShortMessage::getTimestamp() const
 {
     return this->timestamp;
@@ -398,16 +416,6 @@ void WaveShortMessage::setSerial(int serial)
 void WaveShortMessage::setTimestamp(::omnetpp::simtime_t timestamp)
 {
     this->timestamp = timestamp;
-}
-
-string WaveShortMessage::getWSMRid() const
-{
-    return this->wrid;
-}
-
-void WaveShortMessage::setWSMRid(string wrid)
-{
-    this->wrid = wrid;
 }
 
 ::omnetpp::simtime_t WaveShortMessage::getDelay() const
@@ -425,12 +433,20 @@ bool WaveShortMessage::getFl() const
     return this->fl;
 }
 
-void WaveShortMessage::setFl(bool val)
+void WaveShortMessage::setFl(bool fl)
 {
-    this->fl = val;
+    this->fl = fl;
 }
 
+int WaveShortMessage::getHop() const
+{
+    return this->hop;
+}
 
+void WaveShortMessage::setHop(int hop)
+{
+    this->hop = hop;
+}
 
 class WaveShortMessageDescriptor : public omnetpp::cClassDescriptor
 {
@@ -497,7 +513,7 @@ const char *WaveShortMessageDescriptor::getProperty(const char *propertyname) co
 int WaveShortMessageDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 13+basedesc->getFieldCount() : 13;
+    return basedesc ? 16+basedesc->getFieldCount() : 16;
 }
 
 unsigned int WaveShortMessageDescriptor::getFieldTypeFlags(int field) const
@@ -522,8 +538,11 @@ unsigned int WaveShortMessageDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<13) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<16) ? fieldTypeFlags[field] : 0;
 }
 
 const char *WaveShortMessageDescriptor::getFieldName(int field) const
@@ -547,9 +566,13 @@ const char *WaveShortMessageDescriptor::getFieldName(int field) const
         "senderAddress",
         "recipientAddress",
         "serial",
+        "wrid",
         "timestamp",
+        "delay",
+        "fl",
+        "hop",
     };
-    return (field>=0 && field<13) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<16) ? fieldNames[field] : nullptr;
 }
 
 int WaveShortMessageDescriptor::findField(const char *fieldName) const
@@ -568,7 +591,10 @@ int WaveShortMessageDescriptor::findField(const char *fieldName) const
     if (fieldName[0]=='s' && strcmp(fieldName, "senderAddress")==0) return base+9;
     if (fieldName[0]=='r' && strcmp(fieldName, "recipientAddress")==0) return base+10;
     if (fieldName[0]=='s' && strcmp(fieldName, "serial")==0) return base+11;
-    if (fieldName[0]=='t' && strcmp(fieldName, "timestamp")==0) return base+12;
+    if (fieldName[0]=='w' && strcmp(fieldName, "wrid")==0) return base+12;
+    if (fieldName[0]=='t' && strcmp(fieldName, "timestamp")==0) return base+13;
+    if (fieldName[0]=='d' && strcmp(fieldName, "delay")==0) return base+14;
+    if (fieldName[0]=='f' && strcmp(fieldName, "fl")==0) return base+15;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -593,9 +619,12 @@ const char *WaveShortMessageDescriptor::getFieldTypeString(int field) const
         "int",
         "int",
         "int",
+        "string",
         "simtime_t",
+        "simtime_t",
+        "bool",
     };
-    return (field>=0 && field<13) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<16) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **WaveShortMessageDescriptor::getFieldPropertyNames(int field) const
@@ -674,7 +703,10 @@ std::string WaveShortMessageDescriptor::getFieldValueAsString(void *object, int 
         case 9: return long2string(pp->getSenderAddress());
         case 10: return long2string(pp->getRecipientAddress());
         case 11: return long2string(pp->getSerial());
-        case 12: return simtime2string(pp->getTimestamp());
+        case 12: return oppstring2string(pp->getWSMRid());
+        case 13: return simtime2string(pp->getTimestamp());
+        case 14: return simtime2string(pp->getDelay());
+        case 15: return bool2string(pp->getFl());
         default: return "";
     }
 }
@@ -701,7 +733,10 @@ bool WaveShortMessageDescriptor::setFieldValueAsString(void *object, int field, 
         case 9: pp->setSenderAddress(string2long(value)); return true;
         case 10: pp->setRecipientAddress(string2long(value)); return true;
         case 11: pp->setSerial(string2long(value)); return true;
-        case 12: pp->setTimestamp(string2simtime(value)); return true;
+        case 12: pp->setWSMRid((value)); return true;
+        case 13: pp->setTimestamp(string2simtime(value)); return true;
+        case 14: pp->setDelay(string2simtime(value)); return true;
+        case 15: pp->setFl(string2bool(value)); return true;
         default: return false;
     }
 }
