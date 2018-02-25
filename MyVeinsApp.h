@@ -26,6 +26,7 @@
 
 using namespace omnetpp;
 
+
 /**
  * @brief
  * This is a stub for a typical Veins application layer.
@@ -62,8 +63,9 @@ class MyVeinsApp : public BaseWaveApplLayer {
     public:
         virtual void initialize(int stage);
         virtual void finish();
-
-
+        virtual int Find_back(int id);
+        virtual int Find_rsu(int id);
+        //simtime_t dp[10];
   //
 
     protected:
@@ -78,7 +80,8 @@ class MyVeinsApp : public BaseWaveApplLayer {
         virtual double calculateQ(int id);
 
         virtual bool return_Value();
-        virtual int Find_back(int id);
+
+
     };
 
 #endif

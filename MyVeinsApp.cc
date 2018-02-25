@@ -10,7 +10,7 @@ using namespace std;
 Define_Module(MyVeinsApp);
 
 map<int, double> mv;
-int hop[10]={0};
+
 int h[10]={0};
 static int data;
 map<int, pair<double,double>> mp;
@@ -143,8 +143,10 @@ void MyVeinsApp::initialize(int stage) {
 }
 
 void MyVeinsApp::finish() {
-    for(int i=0;i<5;i++)
+    for(int i=0;i<5;i++){
                    cout<<"delay "<<i<<" "<<dp[i]<<endl;
+                   cout<<"hop "<<i<<" "<<h[i]<<endl;
+    }
     BaseWaveApplLayer::finish();
 }
 
@@ -203,7 +205,6 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                   ids[myId]=1;
                                 //  cout<<" ini 1 "<<myId<<endl;
                                   backbone[l].push_back(myId);
-                                  h[l]++;
 
                                   flag[l]=1;
                               }
@@ -270,7 +271,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                  //rd[0].first=1;
 
                                  backbone[l].push_back(v[j].id);
-                                 h[l]++;
+
 
                                  ids[v[j].id]=1;
                       //           cout<<" a "<<v[j].id<<" "<<v[j].rid<<endl;
@@ -355,8 +356,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                //     cout<<"junc_enter"<<junc_enter[i][j]<<endl;
                                  }
                                  if(fl){
-                                      if(hop[i]==0)
-                                          hop[i] = h[i];
+
                                      bridge_node[i]=iid;
 
                                      WaveShortMessage* wsm = new WaveShortMessage();
@@ -367,6 +367,7 @@ void MyVeinsApp::onBSM(BasicSafetyMessage* bsm) {
                                      wsm->setSenderAddress(iid);
                                      wsm->setWsmData("RAP");
                                      wsm->setWSMRid(ss[i]);
+                                     wsm->setHop(0);
                                      wsm->setFl(0);
                                      sendDown(wsm);
 
@@ -381,8 +382,13 @@ void MyVeinsApp::onWSM(WaveShortMessage* wsm) {
     if(wsm->getWSMRid()==traciVehicle->getRoadId()){
         cout<<"fl is "<<wsm->getFl()<<endl;
         if(wsm->getFl() == 0){
-
+            int l = wsm->getHop();
+            wsm->setHop(l+1);
             sendDown(wsm->dup());
+        }
+        else if(id!=-1 && dp[id] == 0){
+            h[id] = wsm->getHop();
+            dp[id] =SIMTIME_DBL(wsm->getDelay());
         }
 
 
